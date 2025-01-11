@@ -1,0 +1,58 @@
+name: 'Restore Docker Volumes from Cache'
+description: 'Restore Docker Volumes from GitHub Actions Cache outputs to improve workflow execution time'
+author: 'BYK'
+inputs:
+  volumes:
+    description: 'A list of docker volumes to restore'
+    required: true
+  key:
+    description: 'An explicit key for restoring the cache'
+    required: true
+  restore-keys:
+    description: 'An ordered multiline string listing the prefix-matched keys, that are used for restoring stale cache if no cache hit occurred for key. Note `cache-hit` returns false in this case.'
+    required: false
+  fail-on-cache-miss:
+    description: 'Fail the workflow if cache entry is not found'
+    default: 'false'
+    required: false
+outputs:
+  cache-hit:
+    description: 'A boolean value to indicate an exact match was found for the primary key'
+    value: ${{ steps.restore_cache.outputs.cache-hit }}
+  cache-primary-key:
+    description: 'A resolved cache key for which cache match was attempted'
+    value: ${{ steps.restore_cache.outputs.cache-primary-key }}
+  cache-matched-key:
+    description: 'Key of the cache that was restored, it could either be the primary key on cache-hit or a partial/complete match of one of the restore keys'
+    value: ${{ steps.restore_cache.outputs.cache-matched-key }}
+branding:
+  icon: 'archive'
+  color: 'gray-dark'
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare Docker Volume Caching
+      id: prepare_cache
+      shell: bash
+      env:
+        INPUTS_VOLUMES: ${{ inputs.volumes }}
+      run: |
+        # Recreate the volumes
+        PATHS=""
+        while IFS= read -r volume ; do
+          docker volume create $volume
+          PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
+        done <<< "$INPUTS_VOLUMES"
+        echo "paths=$PATHS" >> "$GITHUB_OUTPUT"
+        # Set permissions for docker volumes so we can cache and restore
+        sudo chmod o+x /var/lib/docker
+        sudo chmod -R o+rwx /var/lib/docker/volumes
+
+    - name: Restore DB Volumes Cache
+      id: restore_cache
+      uses: actions/cache/restore@v4
+      with:
+        key: ${{ inputs.key }}
+        restore-keys: ${{ inputs.restore-keys }}
+        path: ${{ steps.prepare_cache.outputs.paths }}
+        fail-on-cache-miss: ${{ inputs.fail-on-cache-miss }}

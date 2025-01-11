@@ -1,0 +1,43 @@
+name: 'Save Docker Volumes to Cache'
+description: 'Save Docker Volumes to GitHub Actions Cache to improve workflow execution time'
+author: 'BYK'
+inputs:
+  volumes:
+    description: 'A list of docker volumes to restore'
+    required: true
+  key:
+    description: 'An explicit key for saving the cache'
+    required: true
+  upload-chunk-size:
+    description: 'The chunk size used to split up large files during upload, in bytes'
+    required: false
+branding:
+  icon: 'archive'
+  color: 'gray-dark'
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare Docker Volume Caching
+      id: prepare_cache
+      shell: bash
+      env:
+        INPUTS_VOLUMES: ${{ inputs.volumes }}
+      run: |
+        PATHS=""
+        while IFS= read -r volume ; do
+          PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
+        done <<< "$INPUTS_VOLUMES"
+        echo "paths=$PATHS" >> "$GITHUB_OUTPUT"
+        # Set permissions for docker volumes so we can read them
+        sudo chmod o+x /var/lib/docker
+        sudo chmod -R o+rx /var/lib/docker/volumes
+        # Set tar ownership for it to be able to read
+        # From: https://github.com/actions/toolkit/issues/946#issuecomment-1726311681
+        sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
+    - name: Save Docker Volumes to Cache
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ inputs.key }}
+        path: ${{ steps.prepare_cache.outputs.paths }}
+        upload-chunk-size: ${{ inputs.upload-chunk-size }}
