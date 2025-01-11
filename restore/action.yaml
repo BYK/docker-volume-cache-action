@@ -37,13 +37,17 @@ runs:
       env:
         INPUTS_VOLUMES: ${{ inputs.volumes }}
       run: |
+        PATHS="/var/lib/docker/volumes/permissions.facl"
         # Recreate the volumes
-        PATHS=""
         while IFS= read -r volume ; do
           docker volume create $volume
           PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
         done <<< "$INPUTS_VOLUMES"
-        echo "paths=$PATHS" >> "$GITHUB_OUTPUT"
+        {
+          echo 'paths<<EOF'
+          echo "$PATHS"
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
         # Set permissions for docker volumes so we can cache and restore
         sudo chmod o+x /var/lib/docker
         sudo chmod -R o+rwx /var/lib/docker/volumes
@@ -56,3 +60,14 @@ runs:
         restore-keys: ${{ inputs.restore-keys }}
         path: ${{ steps.prepare_cache.outputs.paths }}
         fail-on-cache-miss: ${{ inputs.fail-on-cache-miss }}
+
+    - name: Restore Volume Permissions
+      shell: bash
+      if: steps.restore_cache.outputs.cache-matched-key
+      run: |
+        PERMS_PATH="/var/lib/docker/volumes/permissions.facl"
+        if [ -f $PERMS_PATH ]; then
+          sudo setfacl --restore=$PERMS_PATH
+        else
+          echo "::warning ::No permissions file found to restore at $PERMS_PATH"
+        fi

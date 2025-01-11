@@ -27,7 +27,15 @@ runs:
         while IFS= read -r volume ; do
           PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
         done <<< "$INPUTS_VOLUMES"
-        echo "paths=$PATHS" >> "$GITHUB_OUTPUT"
+        PERMS_PATH="/var/lib/docker/volumes/permissions.facl"
+        # Save permissions for docker volumes so we can restore that later on
+        sudo getfacl -R . > $PERMS_PATH
+        PATHS="$PATHS\n$PERMS_PATH"
+        {
+          echo 'paths<<EOF'
+          echo "$PATHS"
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
         # Set permissions for docker volumes so we can read them
         sudo chmod o+x /var/lib/docker
         sudo chmod -R o+rx /var/lib/docker/volumes
