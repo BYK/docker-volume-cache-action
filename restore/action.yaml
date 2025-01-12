@@ -40,7 +40,7 @@ runs:
         PATHS="/var/lib/docker/volumes/permissions.facl"
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
-            PATHS="$PATHS /var/lib/docker/volumes/$volume/_data"
+            printf -v PATHS "$PATHS\n/var/lib/docker/volumes/$volume/_data"
           fi
         done <<< "$INPUTS_VOLUMES"
         {
