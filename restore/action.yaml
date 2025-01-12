@@ -38,10 +38,8 @@ runs:
         INPUTS_VOLUMES: ${{ inputs.volumes }}
       run: |
         PATHS="/var/lib/docker/volumes/permissions.facl"
-        # Recreate the volumes
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
-            docker volume create $volume
             PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
           fi
         done <<< "$INPUTS_VOLUMES"
@@ -63,10 +61,18 @@ runs:
         path: ${{ steps.prepare_cache.outputs.paths }}
         fail-on-cache-miss: ${{ inputs.fail-on-cache-miss }}
 
-    - name: Restore Volume Permissions
+    - name: Restore Volume Permissions and Recreate Volumes
       shell: bash
+      env:
+        INPUTS_VOLUMES: ${{ inputs.volumes }}
       if: steps.restore_cache.outputs.cache-matched-key
       run: |
+        # Recreate the volumes
+        while IFS= read -r volume ; do
+          if [ -n "$volume" ]; then
+            docker volume create $volume
+          fi
+        done <<< "$INPUTS_VOLUMES"
         PERMS_PATH="/var/lib/docker/volumes/permissions.facl"
         if [ -f $PERMS_PATH ]; then
           sudo setfacl --restore=$PERMS_PATH
