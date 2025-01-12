@@ -40,7 +40,7 @@ runs:
         PATHS="/var/lib/docker/volumes/permissions.facl"
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
-            printf -v PATHS "$PATHS\n/var/lib/docker/volumes/$volume/_data"
+            printf -v PATHS "$PATHS\n/var/lib/docker/volumes/$volume"
           fi
         done <<< "$INPUTS_VOLUMES"
         {
@@ -71,11 +71,11 @@ runs:
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
             docker volume create $volume
+            PERMS_PATH="/var/lib/docker/volumes/$volume/permissions.facl"
+            if [ -f $PERMS_PATH ]; then
+              sudo setfacl --restore=$PERMS_PATH
+            else
+              echo "::warning ::No permissions file found to restore at $PERMS_PATH"
+            fi
           fi
         done <<< "$INPUTS_VOLUMES"
-        PERMS_PATH="/var/lib/docker/volumes/permissions.facl"
-        if [ -f $PERMS_PATH ]; then
-          sudo setfacl --restore=$PERMS_PATH
-        else
-          echo "::warning ::No permissions file found to restore at $PERMS_PATH"
-        fi
