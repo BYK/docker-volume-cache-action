@@ -23,16 +23,15 @@ runs:
       env:
         INPUTS_VOLUMES: ${{ inputs.volumes }}
       run: |
-        PATHS=""
+        PERMS_PATH="/var/lib/docker/volumes/permissions.facl"
+        PATHS="$PERMS_PATH"
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
-            PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
+            PATHS="$PATHS /var/lib/docker/volumes/$volume/_data"
           fi
         done <<< "$INPUTS_VOLUMES"
-        PERMS_PATH="/var/lib/docker/volumes/permissions.facl"
         # Save permissions for docker volumes so we can restore that later on
         sudo getfacl -R . > $PERMS_PATH
-        PATHS="$PATHS\n$PERMS_PATH"
         {
           echo 'paths<<EOF'
           echo "$PATHS"
