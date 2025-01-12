@@ -40,8 +40,10 @@ runs:
         PATHS="/var/lib/docker/volumes/permissions.facl"
         # Recreate the volumes
         while IFS= read -r volume ; do
-          docker volume create $volume
-          PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
+          if [ -n "$volume" ]; then
+            docker volume create $volume
+            PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
+          fi
         done <<< "$INPUTS_VOLUMES"
         {
           echo 'paths<<EOF'

@@ -25,7 +25,9 @@ runs:
       run: |
         PATHS=""
         while IFS= read -r volume ; do
-          PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
+          if [ -n "$volume" ]; then
+            PATHS="$PATHS\n/var/lib/docker/volumes/$volume/_data"
+          fi
         done <<< "$INPUTS_VOLUMES"
         PERMS_PATH="/var/lib/docker/volumes/permissions.facl"
         # Save permissions for docker volumes so we can restore that later on
