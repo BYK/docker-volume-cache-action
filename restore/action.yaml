@@ -52,8 +52,11 @@ runs:
         sudo chmod o+x /var/lib/docker
         sudo chmod -R o+rwx /var/lib/docker/volumes
 
-        # Try TAR_OPTIONS
-        echo "TAR_OPTIONS=--numeric-owner" >> $GITHUB_ENV
+        # We need to use `--numeric-owner` with `tar` to avoid permission and ownership
+        # issues when restoring docker volumes, so hack it (as actions/cache doesn't do this yet)
+        sudo mv /usr/bin/tar /usr/bin/tar.orig
+        echo 'exec /usr/bin/tar.orig --numeric-owner "$@"' | sudo tee /usr/bin/tar > /dev/null
+        sudo chmod +x /usr/bin/tar
 
     - name: Restore DB Volumes Cache
       id: restore_cache

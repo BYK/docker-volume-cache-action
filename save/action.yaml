@@ -37,11 +37,15 @@ runs:
         # Set permissions for docker volumes so we can read them
         sudo chmod o+x /var/lib/docker
         sudo chmod -R o+rx /var/lib/docker/volumes
+
         # Set tar ownership for it to be able to read
         # From: https://github.com/actions/toolkit/issues/946#issuecomment-1726311681
         sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
-        # Try TAR_OPTIONS
-        echo "TAR_OPTIONS=--numeric-owner" >> $GITHUB_ENV
+        # We need to use `--numeric-owner` with `tar` to avoid permission and ownership
+        # issues when restoring docker volumes, so hack it (as actions/cache doesn't do this yet)
+        sudo mv /usr/bin/tar /usr/bin/tar.orig
+        echo 'exec /usr/bin/tar.orig --numeric-owner "$@"' | sudo tee /usr/bin/tar > /dev/null
+        sudo chmod +x /usr/bin/tar
 
     - name: Save Docker Volumes to Cache
       uses: actions/cache/save@v4
