@@ -27,7 +27,7 @@ runs:
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
             # Save permissions for docker volumes so we can restore that later on
-            sudo getfacl -R . > /var/lib/docker/volumes/$volume/permissions.facl
+            sudo getfacl -R /var/lib/docker/volumes/$volume/ > /var/lib/docker/volumes/$volume/permissions.facl
             printf -v PATHS "$PATHS\n/var/lib/docker/volumes/$volume/"
           fi
         done <<< "$INPUTS_VOLUMES"
