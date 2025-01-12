@@ -52,6 +52,9 @@ runs:
         sudo chmod o+x /var/lib/docker
         sudo chmod -R o+rwx /var/lib/docker/volumes
 
+        # Try TAR_OPTIONS
+        echo "TAR_OPTIONS=--numeric-owner" >> $GITHUB_ENV
+
     - name: Restore DB Volumes Cache
       id: restore_cache
       uses: actions/cache/restore@v4
@@ -71,11 +74,5 @@ runs:
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
             docker volume create $volume
-            PERMS_PATH="/var/lib/docker/volumes/$volume/permissions.facl"
-            if [ -f $PERMS_PATH ]; then
-              sudo setfacl --restore=$PERMS_PATH
-            else
-              echo "::warning ::No permissions file found to restore at $PERMS_PATH"
-            fi
           fi
         done <<< "$INPUTS_VOLUMES"
