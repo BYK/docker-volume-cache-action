@@ -23,6 +23,9 @@ runs:
       env:
         INPUTS_VOLUMES: ${{ inputs.volumes }}
       run: |
+        # Set permissions for docker volumes so we can read them
+        sudo chmod o+x /var/lib/docker
+        sudo chmod -R o+rx /var/lib/docker/volumes
         PATHS=""
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
@@ -36,9 +39,6 @@ runs:
           echo "$PATHS"
           echo EOF
         } >> "$GITHUB_OUTPUT"
-        # Set permissions for docker volumes so we can read them
-        sudo chmod o+x /var/lib/docker
-        sudo chmod -R o+rx /var/lib/docker/volumes
         # Set tar ownership for it to be able to read
         # From: https://github.com/actions/toolkit/issues/946#issuecomment-1726311681
         sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
