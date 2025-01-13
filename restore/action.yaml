@@ -48,15 +48,12 @@ runs:
           echo "$PATHS"
           echo EOF
         } >> "$GITHUB_OUTPUT"
-        # Set permissions for docker volumes so we can cache and restore
-        sudo chmod o+x /var/lib/docker
-        sudo chmod -R o+rwx /var/lib/docker/volumes
 
         # We need to use `--numeric-owner` with `tar` to avoid permission and ownership
         # issues when restoring docker volumes, so hack it (as actions/cache doesn't do this yet)
         sudo mv -n /usr/bin/tar /usr/bin/tar.orig
         echo '#!/bin/bash' | sudo tee /usr/bin/tar > /dev/null
-        echo 'exec /usr/bin/tar.orig --numeric-owner "$@"' | sudo tee -a /usr/bin/tar > /dev/null
+        echo 'sudo exec /usr/bin/tar.orig --numeric-owner "$@"' | sudo tee -a /usr/bin/tar > /dev/null
         sudo chmod +x /usr/bin/tar
 
     - name: Restore DB Volumes Cache
