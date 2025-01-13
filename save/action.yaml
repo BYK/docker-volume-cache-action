@@ -34,6 +34,8 @@ runs:
           echo "$PATHS"
           echo EOF
         } >> "$GITHUB_OUTPUT"
+        # Set permissions for docker folder so we can list files in volumes
+        sudo chmod o+x /var/lib/docker
 
         # We need to use `--numeric-owner` with `tar` to avoid permission and ownership
         # issues when restoring docker volumes, so hack it (as actions/cache doesn't do this yet)
