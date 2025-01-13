@@ -78,7 +78,7 @@ runs:
       shell: bash
       env:
         INPUTS_VOLUMES: ${{ inputs.volumes }}
-      if: !steps.restore_cache.outputs.cache-matched-key
+      if: ${{ !steps.restore_cache.outputs.cache-matched-key }}
       run: |
         # Delete empty volumes when no cache found
         while IFS= read -r volume ; do
