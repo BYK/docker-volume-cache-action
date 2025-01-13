@@ -40,6 +40,10 @@ runs:
         PATHS=""
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
+            # We create the volume first and then try to restore as the `_data` directory
+            # may change owners after use. `tar` keeps this but if the volume is created
+            # after restoring, it will revert back to `0` (root)
+            docker volume create $volume
             printf -v PATHS "$PATHS\n/var/lib/docker/volumes/$volume"
           fi
         done <<< "$INPUTS_VOLUMES"
@@ -74,13 +78,11 @@ runs:
       shell: bash
       env:
         INPUTS_VOLUMES: ${{ inputs.volumes }}
-      if: steps.restore_cache.outputs.cache-matched-key
+      if: !steps.restore_cache.outputs.cache-matched-key
       run: |
-        # Recreate the volumes
+        # Delete empty volumes when no cache found
         while IFS= read -r volume ; do
           if [ -n "$volume" ]; then
-            docker volume create $volume
-            sudo getfacl -nR /var/lib/docker/volumes/$volume
-
+            docker volume rm $volume
           fi
         done <<< "$INPUTS_VOLUMES"
