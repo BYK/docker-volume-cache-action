@@ -54,9 +54,9 @@ runs:
 
         # We need to use `--numeric-owner` with `tar` to avoid permission and ownership
         # issues when restoring docker volumes, so hack it (as actions/cache doesn't do this yet)
-        sudo mv /usr/bin/tar /usr/bin/tar.orig
+        sudo mv -n /usr/bin/tar /usr/bin/tar.orig
         echo '#!/bin/bash' | sudo tee /usr/bin/tar > /dev/null
-        echo '/usr/bin/tar.orig --numeric-owner "$@"' | sudo tee -a /usr/bin/tar > /dev/null
+        echo 'exec /usr/bin/tar.orig --numeric-owner "$@"' | sudo tee -a /usr/bin/tar > /dev/null
         sudo chmod +x /usr/bin/tar
 
     - name: Restore DB Volumes Cache
@@ -67,6 +67,11 @@ runs:
         restore-keys: ${{ inputs.restore-keys }}
         path: ${{ steps.prepare_cache.outputs.paths }}
         fail-on-cache-miss: ${{ inputs.fail-on-cache-miss }}
+
+    - name: Restore tar
+      shell: bash
+      run: |
+        sudo mv -f /usr/bin/tar.orig /usr/bin/tar
 
     - name: Restore Volume Permissions and Recreate Volumes
       shell: bash
