@@ -9,6 +9,8 @@ native [actions/cache](https://github.com/actions/cache/) action. This combined
 action provides a `BYK/docker-volume-cache-action/save` and `BYK/docker-volume-cache-action/restore`
 respectively for making this easy and painless.
 
+If you have the time, you can read https://byk.im/posts/docker-volume-caching-gha/
+
 ## Usage
 
 ```yaml
