@@ -56,6 +56,8 @@ runs:
         # Set permissions for docker volumes so we can write there
         sudo chmod o+x /var/lib/docker
         sudo chmod -R o+wx /var/lib/docker/volumes
+        # This is for tar to be able to do chmod
+        sudo chmod u+sx /usr/bin/tar
 
         # We need to use `--numeric-owner` with `tar` to avoid permission and ownership
         # issues when restoring docker volumes, so hack it (as actions/cache doesn't do this yet)
