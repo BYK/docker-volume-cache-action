@@ -53,6 +53,10 @@ runs:
           echo EOF
         } >> "$GITHUB_OUTPUT"
 
+        # Set permissions for docker volumes so we can write there
+        sudo chmod o+x /var/lib/docker
+        sudo chmod -R o+wx /var/lib/docker/volumes
+
         # We need to use `--numeric-owner` with `tar` to avoid permission and ownership
         # issues when restoring docker volumes, so hack it (as actions/cache doesn't do this yet)
         sudo mv -n /usr/bin/tar /usr/bin/tar.orig
