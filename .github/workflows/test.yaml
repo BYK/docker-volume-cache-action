@@ -1,0 +1,56 @@
+name: Test
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+concurrency:
+  group: ${{ github.ref_name || github.sha }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    name: "Basic tests + UID/GID consistency"
+    steps:
+      - name: Checkout latest release
+        uses: actions/checkout@v4
+
+      - name: Prepare Docker Volume
+        run: |
+          docker volume create test
+          docker run --rm -v 'test:/data' bash -c 'echo "Hello world!" > /data/hello.txt; chown -R 1000:1000 /data'
+
+      - name: Save to cache
+        uses: ./save
+        with:
+          key: test-v1-${{github.run_id}}-${{github.run_attempt}}
+          volumes: test
+
+      - name: Delete volume for testing
+        run: docker volume rm test
+
+      - name: Restore from cache
+        uses: ./restore
+        with:
+          key: test-v1-${{github.run_id}}-${{github.run_attempt}}
+          volumes: test
+          fail-on-cache-miss: true
+
+      - name: Test restored cache status
+        run: |
+          expected="Hello world!
+          1000:1000
+          1000:1000
+          "
+          actual=$(docker run --rm -v 'test:/data' bash -c 'cat /data/hello.txt; stat -c %g:%u /data; stat -c %g:%u /data/hello.txt')
+          if [ "$expected" != "$actual" ]; then
+            echo "Cache restore failed!"
+            echo "Expected: $expected"
+            echo "Actual: $actual"
+            exit 1
+          fi
