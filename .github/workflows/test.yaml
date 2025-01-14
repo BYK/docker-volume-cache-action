@@ -45,8 +45,7 @@ jobs:
         run: |
           expected="Hello world!
           1000:1000
-          1000:1000
-          "
+          1000:1000"
           actual=$(docker run --rm -v 'test:/data' bash -c 'cat /data/hello.txt; stat -c %g:%u /data; stat -c %g:%u /data/hello.txt')
           if [ "$expected" != "$actual" ]; then
             echo "Cache restore failed!"
