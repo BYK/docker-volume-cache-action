@@ -28,7 +28,7 @@ jobs:
   test:
     steps:
       - name: Checkout latest release
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Compute Docker Volume Cache Key
         id: cache_key

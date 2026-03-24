@@ -18,7 +18,7 @@ jobs:
     name: "Basic tests + UID/GID consistency"
     steps:
       - name: Checkout latest release
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Prepare Docker Volume
         run: |

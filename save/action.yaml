@@ -45,7 +45,7 @@ runs:
         sudo chmod +x /usr/bin/tar
 
     - name: Save Docker Volumes to Cache
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         key: ${{ inputs.key }}
         path: ${{ steps.prepare_cache.outputs.paths }}

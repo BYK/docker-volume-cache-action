@@ -67,7 +67,7 @@ runs:
 
     - name: Restore DB Volumes Cache
       id: restore_cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         key: ${{ inputs.key }}
         restore-keys: ${{ inputs.restore-keys }}
